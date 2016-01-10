@@ -1,0 +1,376 @@
+<div class="post">
+		<h1 class="postTitle">
+			<a id="cb_post_title_url" class="postTitle2" href="http://www.cnblogs.com/chiefhsing/p/5071807.html">【Android】Fresco图片加载框架（一）————源码简要分析</a>
+		</h1>
+		<div class="clear"></div>
+		<div class="postBody">
+			<div id="cnblogs_post_body"><div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="http://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #ff0000; font-size: 18px;">/**
+* 本文原创
+* BUT
+* 可以随意转载到任何网站或者App
+* BUT
+* 转载也要按“基本法”
+* SO
+* 请注明原文出处和作者
+*/</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="http://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>&nbsp;</p>
+<p><em><strong><a href="https://github.com/facebook/fresco">官方源码地址</a></strong></em></p>
+<div>&nbsp;</div>
+<div><em><strong><a href="http://frescolib.org/index.html">fresco官方高大上介绍（1）</a></strong></em>（注意：前方有堵墙）</div>
+<div><em><strong><a href="https://code.facebook.com/posts/366199913563917/introducing-fresco-a-new-image-library-for-android/">fresco官方高大上介绍</a><a href="https://code.facebook.com/posts/366199913563917/introducing-fresco-a-new-image-library-for-android/">（2）</a></strong></em>（注意：前方有堵墙）</div>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px; color: #ff0000;"><strong>前言</strong></span></div>
+<div>&nbsp;</div>
+<div><span style="color: #333333;">虽然标题是<strong>fresco分析（一）</strong>，但是并不代表会有2345的啦。</span></div>
+<div>&nbsp;</div>
+<div><span style="color: #333333;">内容基本按流水式发展，大体和自己分析这个库的流程一致，代码很久前大概看了一天，但是没有做任何记录，这次算是权当记录一番，复看了半天，但是，画图画得想撞墙（逃。</span></div>
+<div><span style="color: #333333;">然而，图可能画的并不很规范，看懂就行。</span></div>
+<div>&nbsp;</div>
+<div><span style="color: #333333;">图片加载库不少，主流volley，universal imageloader， glide，picasso，fresco。</span></div>
+<div><span style="color: #333333;">看上fresco的原因：</span></div>
+<div><ol>
+<li><span style="color: #333333;">facebook出品</span></li>
+<li><span style="color: #333333;">代码多啊</span></li>
+</ol></div>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px;"><strong><span style="color: #ff0000;">介绍：</span></strong></span></div>
+<div>&nbsp;</div>
+<div>fresco，facebook开源的针对android应用的图片加载框架，高效和功能齐全。</div>
+<div><ol>
+<li><em><span style="font-size: 18px;">支持加载网络，本地存储和资源图片；</span></em></li>
+<li><em><span style="font-size: 18px;">提供三级缓存（二级memory和一级internal storage）；</span></em></li>
+<li><em><span style="font-size: 18px;">支持JPEGs，PNGs，GIFs，WEBPs等，还支持Progressive JPEG，优秀的动画支持；</span></em></li>
+<li><em><span style="font-size: 18px;">图片圆角，scale，自定义背景，overlays等等；</span></em></li>
+<li><em><span style="font-size: 18px;">优秀的内存管理；</span></em></li>
+<li><em><span style="font-size: 18px;">2.3（Gingerbread）或以上。</span></em></li>
+</ol>
+<div>&nbsp;</div>
+</div>
+<div>（其实上面都是多余的啦~~~）</div>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px;"><strong><span style="color: #ff0000;">正文开始</span></strong></span></div>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div style="text-align: center;"><span style="text-decoration: underline;"><span style="color: #ff0000;">本文涉及得图片可能都不是<span style="font-size: 18px;"><em>太规范</em></span>，如果有强迫症，请忽略</span></span></div>
+<div style="text-align: center;"><span style="color: #ff0000;"><span style="text-decoration: underline;">内容没有大量代码，怕长篇累牍，所以只能是个大概，<span style="font-size: 18px;"><em>慎读</em></span>。</span></span></div>
+<div>&nbsp;</div>
+<div><strong><span style="font-size: 18px; color: #ff0000;">工程</span></strong></div>
+<div>&nbsp;</div>
+<div>clone代码下来，工程的样子大概就是这样的了：</div>
+<div>&nbsp;</div>
+<div><br>
+<div>&nbsp;<img style="display: block; margin-left: auto; margin-right: auto;" src="http://images2015.cnblogs.com/blog/413880/201512/413880-20151224011912656-320070015.png" alt="" width="415" height="608"></div>
+
+
+
+
+
+</div>
+<div>&nbsp;</div>
+<div>简略说一下project structure：</div>
+<div>
+<ul>
+<li><span style="font-size: 18px;">sample module下面是例子，里面有好几个例子工程，例如demo等；</span></li>
+<li><span style="font-size: 18px;"><strong><em><span style="color: #ff0000;">drawee module</span></em></strong>，主要是ui相关的东西，例如DraweeView， drawable相关的类等；</span></li>
+<li><span style="font-size: 18px;"><em><strong><span style="color: #ff0000;">imagepipeline module</span></strong></em>，整个工程的核心，图片加载，内存、缓存管理，bitmap处理等等核心逻辑；</span></li>
+<li><span style="font-size: 18px;"><em><strong><span style="color: #ff0000;">fbcore module</span></strong></em>，可以说是基础类库，一些工具类，基础接口，文件处理等等；</span></li>
+<li><span style="font-size: 18px;">drawee backends，就是基于drawee module里面的某些接口的具体实现，例如如果曾经使用volley的，可以继续使用volley作为图片加载的框架一部分去做加载图片；</span></li>
+<li><span style="font-size: 18px;">imagepipeline backends，也是基于imagepipeline module中某些接口的具体实现，例如http请求是使用okhttp的，可以继续使用okhttp实现；</span></li>
+
+
+
+
+
+</ul>
+<div>project structure大概就是这样，红色标出的是最需要关注的三个module，其他都是easy job。</div>
+
+
+
+
+
+</div>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px;"><strong><span style="color: #ff0000;">用法：</span></strong></span></div>
+<div>&nbsp;</div>
+<div>直接上代码：</div>
+<div>&nbsp;</div>
+<div>xml中：</div>
+<div><span style="font-family: verdana, Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5; background-color: #ffffff;"><span style="font-family: verdana, Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5; background-color: #ffffff;">　</span></span>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="http://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">com.facebook.drawee.view.SimpleDraweeView
+</span><span style="color: #ff0000;">android:id</span><span style="color: #0000ff;">="@+id/baseline_jpeg"</span><span style="color: #ff0000;">
+android:layout_width</span><span style="color: #0000ff;">="match_parent"</span><span style="color: #ff0000;">
+android:layout_height</span><span style="color: #0000ff;">="0dp"</span><span style="color: #ff0000;">
+android:layout_weight</span><span style="color: #0000ff;">="1"</span><span style="color: #ff0000;">
+fresco:actualImageScaleType</span><span style="color: #0000ff;">="fitCenter"</span> <span style="color: #0000ff;">/&gt;</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="http://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>&nbsp;</p>
+</div>
+<div>
+<div>代码：</div>
+</div>
+<div>
+<div>
+<div class="linenums">
+<div class="L0">
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="http://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #008080;">1</span> Uri uri = Uri.parse("http://省略");<span style="color: #008000;">//
+</span><span style="color: #008080;">2</span> ImageRequest request =<span style="color: #000000;"> ImageRequestBuilder.newBuilderWithSource(uri)
+</span><span style="color: #008080;">3</span> .setProgressiveRenderingEnabled(<span style="color: #0000ff;">true</span><span style="color: #000000;">)
+</span><span style="color: #008080;">4</span> <span style="color: #000000;">.build();
+</span><span style="color: #008080;">5</span> DraweeController controller =<span style="color: #000000;"> Fresco.newDraweeControllerBuilder()
+</span><span style="color: #008080;">6</span> <span style="color: #000000;">.setImageRequest(request)
+</span><span style="color: #008080;">7</span> <span style="color: #000000;">.build();
+</span><span style="color: #008080;">8</span> mProgressiveJpegView.setController(controller);</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="http://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>&nbsp;</p>
+</div>
+</div>
+</div>
+<div>代码比较简单，比较容易懂，但是相对其他的图片加载框架而言，感觉这样的调用还是相对复杂。当然自己可以继续封装，减少不必要的大量重复的代码。</div>
+</div>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px;"><strong><span style="color: #ff0000;">流程分析：</span></strong></span></div>
+<div>&nbsp;</div>
+<div>分析流程基本是自己分析开源项目主要做的第一件事情，一遍流程下来，大概就能摸索清楚了。</div>
+<div>&nbsp;</div>
+<div>然后，就有了下面这张图，图大，<span style="color: #ff0000;">手机党慎点</span>~~~</div>
+<div>&nbsp;</div>
+<div>想看细节点，可点击看大图或者下载。。。。</div>
+<div>&nbsp;</div>
+<div><img title="流程图" src="http://images2015.cnblogs.com/blog/413880/201512/413880-20151224012011765-1407021848.jpg" alt="一次网络请求流程图" width="1545" height="2038"></div>
+<div>&nbsp;</div>
+<div>（流程选的是demo例子里面网络加载图片的流程，其他的大概差不多。）</div>
+<div>&nbsp;</div>
+<div><img src="file:///D:/Documents/My%20Knowledge/temp/14dfaf6e-978b-4c9f-8d74-78e71ab60060_128_files/fresco_final_1.jpg" alt="" name="" border="0">
+<div>&nbsp;</div>
+</div>
+<div>（<span style="background-color: #ffff00;">流程图里面省略掉很多细节，但是主要的流程都描述出来了</span>）（图画的我啊。。。。）</div>
+<div>&nbsp;</div>
+<div>一个完整的请求，到响应流程就是这样，相当的复杂，有耐心可以仔细的看看（这渣图也很难有耐心的了）。</div>
+<div>&nbsp;</div>
+<div>虽然复杂，但是确实从实现上看，扩展性和功能性来看，还是相当完善的，正如facebook自己所讲：</div>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px; color: #000000;"><em>Several excellent open source libraries exist that perform these sequences —&nbsp;<a href="http://l.facebook.com/l.php?u=http%3A%2F%2Fsquare.github.io%2Fpicasso&amp;h=7AQHgFEiA&amp;s=1" rel="nofollow" target="_blank"><span style="color: #000000;">Picasso</span></a>,&nbsp;<a href="https://github.com/nostra13/Android-Universal-Image-Loader" rel="nofollow" target="_blank"><span style="color: #000000;">Universal Image Loader</span></a>,&nbsp;<a href="https://github.com/bumptech/glide" rel="nofollow" target="_blank"><span style="color: #000000;">Glide</span></a>, and&nbsp;<a href="https://android.googlesource.com/platform/frameworks/volley" rel="nofollow" target="_blank"><span style="color: #000000;">Volley</span></a>, to name a few. All of these have made important contributions to Android development.&nbsp;We believe our new library goes further in several important ways.</em></span></div>
+<p><small><small>&nbsp;</small></small></p>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px;"><strong><span style="color: #ff0000;">关键点：</span></strong></span></div>
+<div><span style="color: #ff0000;">&nbsp;</span></div>
+<div>关键点的分析，主要是着眼于一些关键的接口和类。这里分module来进行。</div>
+<div>&nbsp;</div>
+<div>先分析<span style="color: #ff0000;">drawee&nbsp;</span>module的，主要下面三个：</div>
+<div><ol>
+<li>DraweeView</li>
+<li>DraweeHierarchy</li>
+<li>DraweeController</li>
+</ol>
+<div>这三个类的关系大概就是一个MVC的模式：</div>
+</div>
+<div>&nbsp;</div>
+<div>
+<ul>
+<li><span style="font-size: 14pt;"><em>DraweeView继承ImageView，即V，负责展现DraweeHierarchy；</em></span></li>
+<li><span style="font-size: 14pt;"><em>DraweeHierarchy是M，可以认为它由多层的drawable组成，每一层为图片提供某种特定的功能，例如scale，fade-in，layering等等；</em></span></li>
+<li><span style="font-size: 14pt;"><em>DraweeController是C，处理核心的控制逻辑。例如向pipeline（或者其他图片加载库)发出请求，并接收相应事件，并根据不同事件控制DraweeHierarchy；还有，从DraweeView接收事件，然后做出取消网络请求、回收资源等操作。</em></span></li>
+</ul>
+<div>具体细节这里不展开讨论，但是得提一个就是，DraweeView设置图片使用的并不是setBitmap方法，所有的操作都是对DraweeView的drawable进行操作，不管是更新，圆角等等。</div>
+</div>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div>然后分析<span style="color: #ff0000;">fbcore</span>：</div>
+<div><ol>
+<li>DataSource</li>
+<li>DataSubscriber</li>
+</ol></div>
+<div>fbcore里面基本都是一些基础类，这两个接口也不例外。</div>
+<div>
+<ul>
+<li><span style="font-size: 14pt;"><em>DataSource，Java里面的Futures的替代品，从字面意思就知道，它代表数据来源，它和Futures不同的是，可以有一系列的result，而不是一个。</em></span></li>
+<li><span style="font-size: 14pt;"><em>DataSubscriber，和DataSource对应，用于接收从DataSource返回的结果，从字面意思也能知道大概作用</em></span></li>
+</ul>
+<div>DataSource的任何状态改变，DataSubscriber理应接收相应的事件，然后处理。</div>
+</div>
+<div>简单理解就是，DataSource代表数据处理流程和结果，DataSubscriber就像Callback一样，不断接收事件。</div>
+<div>这两个都是接口，有很多的不同实现，这里不讨论。主要的两个实现类是AbstractDataSource和BaseDataSubcriber，其他的实现基本都是继承这两个抽象类的。</div>
+<div>&nbsp;</div>
+<div>最后是<span style="color: #ff0000;">imagepipeline</span>，最核心的模块。</div>
+<div>&nbsp;</div>
+<div>虽然是核心模块，但是核心模块其实也就几个关键点，面向接口编程指导下，基本上找到关键的接口，整个框架就清晰了。</div>
+<div><ol>
+<li>ImagePipeline和ImagePipelineConfig</li>
+<li>Producer和Consumer</li>
+</ol>
+<div>&nbsp;</div>
+</div>
+<div>
+<ul>
+<li><em><span style="font-size: 14pt;">ImagePipeline是整个module的entry point，获取图片的主要接口都是通过它来调用 。</span></em></li>
+</ul>
+</div>
+<div>
+<ul>
+<li><em><span style="font-size: 14pt;">ImagePipelineConfig顾名思义，是用来配置ImagePipeline的属性的，例如内存缓存配置，本地文件缓存配置，bitmapconfig等等。</span></em></li>
+</ul>
+</div>
+<div>&nbsp;</div>
+<div><em><strong>Producer</strong></em>和<em><strong>Cosumer</strong></em>明显的<em>生产者</em>和<em>消费者</em>模式了。<em><strong>Producer</strong></em>在imagepipeline在有各种各样的实现，超过10种以上。例如包含<em><strong>NetworkFetcherProducer</strong></em>，<em><strong>LocalAssetFetcherProducer</strong></em>，<em><strong>LocalFileFetchProducer</strong></em>等等。</div>
+<div>而这些producer就是最终”产出“图片的地方，上层图片的来源（<span style="text-decoration: underline;"><em><strong>DataSource</strong></em>&lt;T&gt;</span>）就是从此处得到的。当然producer也包含一些具体的处理，例如对图片进行encode，resize等等。不同的处理可能对应不同的producer。</div>
+<div>&nbsp;</div>
+<div>而众多producer都可以通过<em><strong>ProducerFactory</strong></em>这个工厂类获得。而设计上有个巧妙的地方就是，producer往往是一层嵌一层的，什么意思，基本就是类似于我们平常用的io stream一样：</div>
+<div>
+<div>
+<div class="linenums">
+<div class="L0">
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">new</span> BufferedReader(<span style="color: #0000ff;">new</span> InputStreamReader(<span style="color: #0000ff;">new</span> FileInputStream(file)));</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div>
+</div>
+<div>&nbsp;</div>
+</div>
+<div>就是通过这种方式，底层上来的原始数据，一层层的进行特定的处理，然后产出一个最后的结果，便于上层直接进行使用。例如：</div>
+<div>
+<div>
+<div class="linenums">
+<div class="L0">
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="http://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">public</span> &lt;T&gt; ThreadHandoffProducer&lt;T&gt;<span style="color: #000000;"> newBackgroundThreadHandoffProducer(
+Producer</span>&lt;T&gt;<span style="color: #000000;"> inputProducer) {
+</span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span> ThreadHandoffProducer&lt;T&gt;<span style="color: #000000;">(
+mExecutorSupplier.forLightweightBackgroundTasks(),
+inputProducer);
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="http://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>&nbsp;</p>
+</div>
+</div>
+</div>
+<div>参数也是一个producer，然后可以不断的嵌套。这个在impineline里面叫做producer sequence（producer链？）。对应的有<em><strong>ProducerSequenceFactory</strong></em>这个工厂类，用它来获得不同的producer sequence。</div>
+</div>
+<div>&nbsp;</div>
+<div><em><strong>Consumer</strong></em>就是用来接收producer的产出结果的，最后一步步回调回到上层ui。</div>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px;"><strong><span style="color: #ff0000;">运作：</span></strong></span></div>
+<div><strong><span style="color: #ff0000;">&nbsp;</span></strong></div>
+<div>整个库运行的流程（其实是一个activity diagram）简略如下（详细的可以<span style="color: #ff0000;">加倍耐心</span>参看上面的sequence diagram）：</div>
+<div>&nbsp;</div>
+<div>
+<div><img style="display: block; margin-left: auto; margin-right: auto;" src="http://images2015.cnblogs.com/blog/413880/201512/413880-20151224012646562-1175670039.jpg" alt=""></div>
+<div>&nbsp;</div>
+<div><span style="color: #ff0000; font-size: 18px;">框架：</span></div>
+<div><strong><span style="color: #ff0000;">&nbsp;</span></strong></div>
+<div>框架大概是这样（个人总结）：</div>
+<div>&nbsp;</div>
+<div>&nbsp;<img style="display: block; margin-left: auto; margin-right: auto;" src="http://images2015.cnblogs.com/blog/413880/201512/413880-20151224013137046-1592864445.png" alt=""></div>
+<div>&nbsp;</div>
+</div>
+<div>
+<div><img src="file:///D:/Documents/My%20Knowledge/temp/14dfaf6e-978b-4c9f-8d74-78e71ab60060_128_files/fresco-structure.png" alt="" name="" border="0"></div>
+<div style="text-align: center;"><strong><em>ImagePipeline框架图</em></strong></div>
+<div>&nbsp;</div>
+</div>
+<div><span style="font-size: 18px;"><strong><span style="color: #ff0000;">其他：</span></strong></span></div>
+<div>&nbsp;</div>
+<div>由于整个库的东西包含很多，功能性和扩展性很强，而且有很多巧妙的设计，本文无法一一详述，上面分析的都是库的整体框架，虽然整个库不小，但是其实架子就上面一点东西而已。</div>
+<div>&nbsp;</div>
+<div>下面罗列出其他一些需要关注的<span style="color: #ff0000;"><em><strong>key point</strong></em></span>：</div>
+<div><ol>
+<li><span style="font-size: 18px;">缓存机制（三级缓存）；内存缓存是如何管理的，文件缓存是怎么存储和读取的；</span></li>
+<li><span style="font-size: 18px;">内存管理，防止OOM，主要是bitmap等内存占用大的对象处理；主要用到的是<em>SharedReference</em>这个类,相关的还有<em>CloseableReference</em>，整个库随处可见，其实就是一个支持引用计数的对象，类型于C++的shared_ptr，当计数为0时，就可以释放。</span></li>
+<li><span style="font-size: 18px;">不同的图片格式对应的处理方式，图片处理涉及到一些第三方的native库，例如giflib，libjpeg，libpng等；</span></li>
+<li><span style="font-size: 18px;">各种不同的drawable的实现，特别是progressive drawable和gif这些复杂的实现，和DraweeHierarchy对图片切换的实现；</span></li>
+<li><span style="font-size: 18px;">多线程处理。为什么叫pipeline呢？这也是值得深究的。pipeline对于熟悉操作系统的都知道，现代cpu的架构都是pipelined的，以实现parallelism。个人觉得，imagepipeline也是有这个意思，把一个任务拆分成多个独立单元，然后并行处理。官方文档中也有所提及。有如图：</span><br>
+<div>&nbsp;</div>
+<div><span style="font-size: 18px;">&nbsp;<img style="display: block; margin-left: auto; margin-right: auto;" src="http://images2015.cnblogs.com/blog/413880/201512/413880-20151224013238546-360401415.png" alt=""></span></div>
+<div><span style="font-size: 18px;">&nbsp;</span></div>
+
+
+
+
+
+
+</li>
+<li><span style="font-size: 18px;">整个库实现设计上，各种设计模式乱入。builder，factory，wrapper，producer/consumer，adapter等等。</span></li>
+<li><span style="font-size: 18px;">其他细节，自己发掘。。。</span>。<br>
+<div>&nbsp;</div>
+
+
+
+
+
+
+</li>
+
+
+
+
+
+
+</ol></div>
+<div><span style="color: #ff0000; font-size: 14pt;"><strong>总结：</strong></span></div>
+<div><span style="color: #ff0000;">&nbsp;</span></div>
+<div>fresco确实提供了很强大的功能，支持上也很完善。</div>
+<div>但是，对比其他类似库还是不同的，自然优缺点都存在。</div>
+<div>优缺点参考的是：<a href="http://stackoverflow.com/questions/29363321/picasso-v-s-imageloader-v-s-fresco-vs-glide">http://stackoverflow.com/questions/29363321/picasso-v-s-imageloader-v-s-fresco-vs-glide</a>，这里面对几个图片加载库进行了对比，fresco<span style="color: #ff0000;">优缺点</span>如下：</div>
+<div>&nbsp;</div>
+<div><span style="font-size: 16px;">(-)</span><br><span style="font-size: 16px;">- Huge size of library</span><br><span style="font-size: 16px;">- App freeze while loading big images from internet into ListView</span><br><span style="font-size: 16px;">- Huge size of cache</span><br><span style="font-size: 16px;">(+)</span><br><span style="font-size: 16px;">- Pretty fast image loader</span><br><span style="font-size: 16px;">- A lot of functionality</span></div>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div>fresco优缺点，由于没有在实际项目中使用，所以没有详细数据，<strong><span style="color: #ff0000;">有待继续确认</span></strong>，但是库确实比较大，这是比较显而易见的。</div>
+<div>&nbsp;</div>
+<div style="text-align: center;"><span style="font-size: 18px;"><em><strong>~~~文卒~~~</strong></em></span></div>
+<p>&nbsp;</p></div><div id="MySignature"></div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory"></div>
+<div id="EntryTag">标签: <a href="http://www.cnblogs.com/chiefhsing/tag/android/">android</a>, <a href="http://www.cnblogs.com/chiefhsing/tag/%E5%9B%BE%E7%89%87%E5%8A%A0%E8%BD%BD/">图片加载</a>, <a href="http://www.cnblogs.com/chiefhsing/tag/fresco/">fresco</a>, <a href="http://www.cnblogs.com/chiefhsing/tag/%E6%BA%90%E7%A0%81/">源码</a>, <a href="http://www.cnblogs.com/chiefhsing/tag/%E6%A1%86%E6%9E%B6/">框架</a></div>
+<div id="blog_post_info"><div id="green_channel">
+<a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(5071807,cb_blogId,1);green_channel_success(this,'谢谢推荐！');">好文要顶</a>
+<a id="green_channel_follow" onclick="c_follow();" href="javascript:void(0);">关注我</a>
+<a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a><a id="green_channel_contact" href="//msg.cnblogs.com/send/chiefhsing" target="_blank">联系我</a>
+<a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="//common.cnblogs.com/images/icon_weibo_24.png" alt=""></a>
+<a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="//common.cnblogs.com/images/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+<div id="author_profile_info" class="author_profile_info">
+<a href="http://home.cnblogs.com/u/chiefhsing/" target="_blank"><img src="http://pic.cnblogs.com/face/u413880.jpg?id=30022115" class="author_avatar" alt=""></a>
+<div id="author_profile_detail" class="author_profile_info">
+<a href="http://home.cnblogs.com/u/chiefhsing/">chiefhsing</a><br>
+<a href="http://home.cnblogs.com/u/chiefhsing/followees">关注 - 0</a><br>
+<a href="http://home.cnblogs.com/u/chiefhsing/followers">粉丝 - 4</a>
+</div>
+</div>
+<div class="clear"></div>
+<div id="author_profile_honor"></div>
+<div id="author_profile_follow">
+</div>
+</div>
+<div id="div_digg">										
+    <div class="diggit" onclick="votePost(5071807,'Digg')">
+        <span class="diggnum" id="digg_count">1</span>
+    </div>
+	<div class="buryit" onclick="votePost(5071807,'Bury')"> 
+		<span class="burynum" id="bury_count">0</span>
+	</div>
+	<div class="clear"></div>	
+	<div class="diggword" id="digg_tips">
+    (请您对文章做出评价)
+    </div>	
+</div>
+</div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="http://www.cnblogs.com/chiefhsing/p/3311922.html" class="p_n_p_prefix">« </a> 上一篇：<a href="http://www.cnblogs.com/chiefhsing/p/3311922.html" title="发布于2013-09-10 12:08">TSL(SSL)相关内容</a><br></div>
+</div>
+
+
+		</div>
+		<div class="postDesc">posted @ <span id="post-date">2015-12-24 01:45</span> <a href="http://www.cnblogs.com/chiefhsing/">chiefhsing</a> 阅读(<span id="post_view_count">235</span>) 评论(<span id="post_comment_count">2</span>)  <a href="http://i.cnblogs.com/EditPosts.aspx?postid=5071807" rel="nofollow">编辑</a> <a href="#" onclick="AddToWz(5071807);return false;">收藏</a></div>
+	</div>
