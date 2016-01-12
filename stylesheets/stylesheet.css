@@ -402,3 +402,12 @@ footer a:hover {
     margin: 0 auto;
     color: black;
 }
+
+
+.bodyHeader{
+    width: 1020px;
+    margin: 0 auto;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    color: black;
+}
