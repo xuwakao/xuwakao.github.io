@@ -314,7 +314,7 @@ function removeLineNumber(n) {
 function loadEncoderJs() {
     var n = document.createElement("script"), t;
     n.type = "text/javascript";
-    n.src = "http://wacao.cn/javascripts/encoder.js";
+    n.src = "http://wacao.cn/javascripts/encode.js";
     t = document.getElementsByTagName("script")[0];
     t.parentNode.insertBefore(n, t)
 }
