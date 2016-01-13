@@ -507,7 +507,7 @@ BufferedReader bufferedReader </span>= <span style="color: #0000ff;">new</span> 
                     </div>
                     <div>&nbsp;</div>
                 </div>
-                <div>从前面知道，当开始拉取图片的时候，<span style="text-decoration: underline;">Producer</span><strong><em><span style="text-decoration: underline;">#produceResult</span></em></strong>开始执行，红色注释标出了关键的步骤，从这些步骤可以看出，其实<strong><em><span style="text-decoration: underline;">DiskCacheProducer</span></em></strong>实的拉取图片时，做的任务大概就是：<span data-wiz-span="data-wiz-span"><span style="font-size: 18px;"><strong><span style="color: #ff0000;"><em>先看Diskcache中是否有缓存的图片，如果有，就直接返回缓存，如果没有，就用</em><span style="text-decoration: underline;"><em>inputProducer</em></span><em>来处理</em></span></strong></span>。</span></div>
+                <div>从前面知道，当开始拉取图片的时候，<span style="text-decoration: underline;">Producer</span><strong><em><span style="text-decoration: underline;">#produceResult</span></em></strong>开始执行，注释标出了关键的步骤，从这些步骤可以看出，其实<strong><em><span style="text-decoration: underline;">DiskCacheProducer</span></em></strong>拉取图片时，做的任务大概就是：<span data-wiz-span="data-wiz-span"><span style="font-size: 18px;"><strong><span style="color: #ff0000;"><em>先看Diskcache中是否有缓存的图片，如果有，就直接返回缓存，如果没有，就用</em><span style="text-decoration: underline;"><em>inputProducer</em></span><em>来处理</em></span></strong></span>。</span></div>
                 <div>&nbsp;</div>
                 <div>然后，<strong><em><span style="text-decoration: underline;">inputProducer</span></em></strong>处理完结果会怎样呢？它处理的结果会在<strong><em><span style="text-decoration: underline;">consumer</span></em></strong>中接收到，上面的例子代码对应的就是<strong><em><span style="text-decoration: underline;">DiskCacheConsumer：</span></em></strong></div>
                 <div>&nbsp;</div>
