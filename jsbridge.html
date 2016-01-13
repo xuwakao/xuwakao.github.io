@@ -1,0 +1,165 @@
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen"/>
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen"/>
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print"/>
+
+    <script src="/javascripts/jquery.js" type="text/javascript"></script>
+    <script src="/javascripts/common.js" type="text/javascript"></script>
+
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Android JSBridge</title>
+</head>
+
+<body>
+<div class="bodyHeader">
+    <h2>
+        <a href="index.html">主页</a>
+    </h2>
+</div>
+<div id="container">
+
+    <div class="post">
+        <h1 class="postTitle">
+            <a id="cb_post_title_url" class="postTitle2" href="http://wacao.cn/jsbridge.html">Android JSBridge</a>
+        </h1>
+        <div class="clear"></div>
+        <div class="postBody">
+            <div id="readme" class="boxed-group clearfix announce instapaper_body md">
+                <article class="markdown-body entry-content" itemprop="mainContentOfPage">
+
+                    <hr>
+
+                    <p>项目Github地址 ： <a href="https://github.com/xuwakao/JsBridge">JsBridge</a>.</p>
+                    <p>简要介绍 ： 基于@JavascriptInterface实现的JSBridge，支持Java和Js相互调用，Js调用Java提供同步和异步的方式，Java调用Js提供异步接口</p>
+                    <p>下面是README</p>
+
+                    <hr>
+
+                    <h2><a id="user-content-description" class="anchor" href="#description" aria-hidden="true"><span class="octicon octicon-link"></span></a>Description</h2>
+
+                    <p>Enhanced version of <a href="https://github.com/lzyzsd/JsBridge">JsBridge</a>.</p>
+
+                    <h2><a id="user-content-support" class="anchor" href="#support" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support</h2>
+
+                    <p>This project make a bridge between Java and JavaScript.</p>
+
+                    <p>++ Provides safe and convenient way to call Java code from js and call js code from java.</p>
+
+                    <p>++ Provide sychronized and asychronized method to call from js</p>
+
+
+
+
+
+                    <h2><a id="user-content-usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+                    <h2><a id="user-content-use-it-in-java" class="anchor" href="#use-it-in-java" aria-hidden="true"><span class="octicon octicon-link"></span></a>Use it in Java</h2>
+
+                    <p>add com.github.lzyzsd.BridgeWebView to your layout, it is inherited from WebView.</p>
+
+                    <h3><a id="user-content-register-a-java-processor-function-so-that-js-can-call" class="anchor" href="#register-a-java-processor-function-so-that-js-can-call" aria-hidden="true"><span class="octicon octicon-link"></span></a>Register a Java processor function so that js can call</h3>
+
+                    <div class="highlight highlight-source-java"><pre>            <span class="pl-k">----------</span>register sychronized processor<span class="pl-k">------------</span><span class="pl-k">-</span>
+            webView<span class="pl-k">.</span>registerCallProcessor(<span class="pl-c1">0</span>, <span class="pl-k">new</span> <span class="pl-smi">BridgeCallProcessor</span>() {
+                <span class="pl-k">@Override</span>
+                <span class="pl-k">public</span> <span class="pl-k">void</span> <span class="pl-en">process</span>(<span class="pl-smi">String</span> <span class="pl-v">data</span>, <span class="pl-smi">CallBackFunction</span> <span class="pl-v">callback</span>) {
+                    callback<span class="pl-k">.</span>onCallBack(data);
+                }
+            });
+
+            <span class="pl-k">----------</span><span class="pl-k">-</span>register asychronized processor<span class="pl-k">------------</span><span class="pl-k">-</span>
+            webView<span class="pl-k">.</span>registerFetchProcessor(<span class="pl-c1">0</span>, <span class="pl-k">new</span> <span class="pl-smi">BridgeFetchProcessor</span>() {
+                <span class="pl-k">@Override</span>
+                <span class="pl-k">public</span> <span class="pl-smi">String</span> <span class="pl-en">process</span>(<span class="pl-smi">String</span> <span class="pl-v">data</span>) {
+                    <span class="pl-k">return</span> data;
+                }
+            });
+</pre></div>
+
+                    <p>js can call this Java through:</p>
+
+                    <div class="highlight highlight-source-js"><pre>        <span class="pl-k">----------</span><span class="pl-k">-</span>synchronized fetch data <span class="pl-k">from</span> native<span class="pl-k">------------</span><span class="pl-k">-</span>
+        <span class="pl-k">var</span> response <span class="pl-k">=</span> <span class="pl-smi">window</span>.<span class="pl-smi">WebViewJavascriptBridge</span>.<span class="pl-en">fetchNativeData</span>(<span class="pl-c1">0</span>, data);
+
+        <span class="pl-k">----------</span><span class="pl-k">-</span>asynchronized call <span class="pl-c1">java</span> handler<span class="pl-k">------------</span><span class="pl-k">-</span>
+        <span class="pl-smi">window</span>.<span class="pl-smi">WebViewJavascriptBridge</span>.<span class="pl-en">callHandler</span>(<span class="pl-c1">0</span>
+                , {<span class="pl-s"><span class="pl-pds">'</span>param<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>processor测试<span class="pl-pds">'</span></span>}
+                , <span class="pl-k">function</span> (<span class="pl-smi">responseData</span>) {
+                    <span class="pl-smi">document</span>.<span class="pl-c1">getElementById</span>(<span class="pl-s"><span class="pl-pds">"</span>show<span class="pl-pds">"</span></span>).<span class="pl-smi">innerHTML</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>send get responseData from java, data = <span class="pl-pds">"</span></span> <span class="pl-k">+</span> responseData;
+                }
+</pre></div>
+
+                    <h3><a id="user-content-register-a-javascript-handler-function-so-that-java-can-call" class="anchor" href="#register-a-javascript-handler-function-so-that-java-can-call" aria-hidden="true"><span class="octicon octicon-link"></span></a>Register a JavaScript handler function so that Java can call</h3>
+
+                    <div class="highlight highlight-source-js"><pre>            <span class="pl-smi">WebViewJavascriptBridge</span>.<span class="pl-en">registerHandler</span>(<span class="pl-s"><span class="pl-pds">"</span>functionInJs<span class="pl-pds">"</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">data</span>, <span class="pl-smi">responseCallback</span>) {
+                <span class="pl-smi">document</span>.<span class="pl-c1">getElementById</span>(<span class="pl-s"><span class="pl-pds">"</span>show<span class="pl-pds">"</span></span>).<span class="pl-smi">innerHTML</span> <span class="pl-k">=</span> (<span class="pl-s"><span class="pl-pds">"</span>data from Java: = <span class="pl-pds">"</span></span> <span class="pl-k">+</span> data);
+                <span class="pl-k">var</span> responseData <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>Javascript Says Right back aka!<span class="pl-pds">"</span></span>;
+                <span class="pl-en">responseCallback</span>(responseData);
+            });
+</pre></div>
+
+                    <p>Java can call this js handler function "functionInJs" through:</p>
+
+                    <div class="highlight highlight-source-java"><pre>        webView<span class="pl-k">.</span>callJsHandler(<span class="pl-s"><span class="pl-pds">"</span>functionInJs<span class="pl-pds">"</span></span>, <span class="pl-k">new</span> <span class="pl-smi">Gson</span>()<span class="pl-k">.</span>toJson(user), <span class="pl-k">new</span> <span class="pl-smi">CallBackFunction</span>() {
+            <span class="pl-k">@Override</span>
+            <span class="pl-k">public</span> <span class="pl-k">void</span> <span class="pl-en">onCallBack</span>(<span class="pl-smi">String</span> <span class="pl-v">data</span>) {
+                <span class="pl-smi">Log</span><span class="pl-k">.</span>d(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>oncallback data = <span class="pl-pds">"</span></span> <span class="pl-k">+</span> data);
+            }
+        });
+</pre></div>
+
+                    <p>You can also define a default handler use init method, so that Java can send message to js without assigned handlerName</p>
+
+                    <p>for example:</p>
+
+                    <div class="highlight highlight-source-js"><pre>    <span class="pl-smi">bridge</span>.<span class="pl-en">init</span>(<span class="pl-k">function</span>(<span class="pl-smi">message</span>, <span class="pl-smi">responseCallback</span>) {
+        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>JS got a message<span class="pl-pds">'</span></span>, message);
+        <span class="pl-k">var</span> data <span class="pl-k">=</span> {
+            <span class="pl-s"><span class="pl-pds">'</span>Javascript Responds<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Wee!<span class="pl-pds">'</span></span>
+        };
+        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>JS responding with<span class="pl-pds">'</span></span>, data);
+        <span class="pl-en">responseCallback</span>(data);
+    });
+</pre></div>
+
+                    <div class="highlight highlight-source-java"><pre>    webView<span class="pl-k">.</span>send(<span class="pl-s"><span class="pl-pds">"</span>hello<span class="pl-pds">"</span></span>);</pre></div>
+
+                    <p>will print 'JS got a message hello' and 'JS responding with' in webview console.</p>
+
+                    <h2><a id="user-content-notice" class="anchor" href="#notice" aria-hidden="true"><span class="octicon octicon-link"></span></a>Notice</h2>
+
+                    <p>This lib will inject a WebViewJavascriptBridge Object to window object.
+                        So in your js, before use WebViewJavascriptBridge, you must detect if WebViewJavascriptBridge exist.
+                        If WebViewJavascriptBridge does not exit, you can listen to WebViewJavascriptBridgeReady event, as the blow code shows:</p>
+
+                    <div class="highlight highlight-source-js"><pre>    <span class="pl-k">if</span> (<span class="pl-smi">window</span>.<span class="pl-smi">WebViewJavascriptBridge</span>) {
+        <span class="pl-c">//do your work here</span>
+    } <span class="pl-k">else</span> {
+        <span class="pl-smi">document</span>.<span class="pl-en">addEventListener</span>(
+            <span class="pl-s"><span class="pl-pds">'</span>WebViewJavascriptBridgeReady<span class="pl-pds">'</span></span>
+            , <span class="pl-k">function</span>() {
+                <span class="pl-c">//do your work here</span>
+            },
+            <span class="pl-c1">false</span>
+        );
+    }
+</pre></div>
+
+                    <h2><a id="user-content-license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+                    <p>This project is licensed under the terms of the MIT license.</p>
+                </article>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
