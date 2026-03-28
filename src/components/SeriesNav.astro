@@ -1,0 +1,125 @@
+---
+import type { Series } from "@/utils/getSeries";
+import { getSeriesLabel } from "@/utils/getSeries";
+
+type Props = {
+  series: Series[];
+  current?: string;
+};
+
+const { series, current } = Astro.props;
+const currentLabel = current ? getSeriesLabel(current) : "All";
+---
+
+<!-- Desktop: positioned in the left margin outside content area -->
+<nav
+  class="hidden xl:block"
+  style="position: sticky; top: 6rem; float: left; margin-left: calc((100% - 48rem) / 2 - 11.5rem); width: 9rem;"
+  aria-label="Series navigation"
+  id="series-nav"
+>
+  <h3 class="mb-3 text-xs font-semibold uppercase tracking-wider opacity-50">
+    Series
+  </h3>
+  <ul class="flex flex-col gap-0.5">
+    <li>
+      <a
+        href="/blog"
+        class:list={[
+          "block rounded px-2.5 py-1.5 text-sm transition-colors",
+          !current
+            ? "font-medium text-accent"
+            : "text-foreground/70 hover:text-accent",
+        ]}
+      >
+        All
+      </a>
+    </li>
+    {
+      series.map(s => (
+        <li>
+          <a
+            href={`/blog/${s.slug}`}
+            class:list={[
+              "block rounded px-2.5 py-1.5 text-sm transition-colors",
+              current === s.slug
+                ? "font-medium text-accent"
+                : "text-foreground/70 hover:text-accent",
+            ]}
+          >
+            {getSeriesLabel(s.slug)}
+            <span class="ml-0.5 opacity-40 text-xs">({s.count})</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<!-- Mobile/Tablet: compact dropdown -->
+<div class="app-layout xl:hidden">
+  <div class="mt-4 mb-4 relative" id="series-dropdown">
+    <button
+      id="series-toggle"
+      class="flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-sm hover:border-accent transition-colors"
+      aria-expanded="false"
+    >
+      <span class="font-medium">{currentLabel}</span>
+      <svg class="size-3.5 transition-transform" id="series-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 4.5L6 7.5L9 4.5" />
+      </svg>
+    </button>
+    <nav
+      id="series-menu"
+      class="hidden absolute top-full left-0 z-20 mt-1 rounded-lg border border-border bg-background py-1 shadow-lg"
+      aria-label="Series navigation"
+    >
+      <a
+        href="/blog"
+        class:list={[
+          "block px-4 py-2 text-sm transition-colors hover:bg-muted",
+          !current ? "font-medium text-accent" : "",
+        ]}
+      >
+        All
+      </a>
+      {
+        series.map(s => (
+          <a
+            href={`/blog/${s.slug}`}
+            class:list={[
+              "block px-4 py-2 text-sm transition-colors hover:bg-muted whitespace-nowrap",
+              current === s.slug ? "font-medium text-accent" : "",
+            ]}
+          >
+            {getSeriesLabel(s.slug)}
+            <span class="ml-0.5 opacity-40 text-xs">({s.count})</span>
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</div>
+
+<script is:inline data-astro-rerun>
+  (function () {
+    const btn = document.getElementById("series-toggle");
+    const menu = document.getElementById("series-menu");
+    const chevron = document.getElementById("series-chevron");
+    if (!btn || !menu || !chevron) return;
+
+    btn.addEventListener("click", () => {
+      const open = menu.classList.toggle("hidden");
+      btn.setAttribute("aria-expanded", !open ? "true" : "false");
+      chevron.style.transform = !open ? "rotate(180deg)" : "";
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add("hidden");
+        btn.setAttribute("aria-expanded", "false");
+        chevron.style.transform = "";
+      }
+    });
+  })();
+</script>

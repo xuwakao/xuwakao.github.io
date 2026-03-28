@@ -1,10 +1,28 @@
-_site/*
-_theme_packages/*
+# build output
+dist/
 
-Thumbs.db
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
 .DS_Store
 
-!.gitkeep
+# jetbrains setting folder
+.idea/
 
-.rbenv-version
-.rvmrc
+# pagefind
+
+public/pagefind
