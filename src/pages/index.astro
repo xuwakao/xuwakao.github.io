@@ -1,38 +1,33 @@
 ---
+import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import LinkButton from "@/components/LinkButton.astro";
 import Card from "@/components/Card.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Pagination from "@/components/Pagination.astro";
+import SeriesNav from "@/components/SeriesNav.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
-import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import { getUniqueSeries } from "@/utils/getSeries";
 import { SITE } from "@/config";
 
-const posts = await getCollection("blog");
-
-const sortedPosts = getSortedPosts(posts);
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const sortedPosts = getSortedPosts(allPosts);
+const series = getUniqueSeries(allPosts);
 ---
 
-<Layout>
+<Layout title={SITE.title}>
   <Header />
-  <main id="main-content" data-layout="index" class="app-layout">
-    <section id="posts" class="pt-12 pb-6">
+  <div class="relative">
+    <SeriesNav {series} />
+    <main id="main-content" data-layout="index" class="app-layout pb-4">
+      <p class="mt-2 mb-6 italic">Deep dive into the code, so you don't have to.</p>
       <ul>
-        {sortedPosts.map(
-          (data, index) =>
-            index < SITE.postPerIndex && <Card variant="h2" {...data} />
-        )}
+        {sortedPosts.map(data => <Card variant="h2" {...data} />)}
       </ul>
-    </section>
-
-    <div class="my-8 text-center">
-      <LinkButton href="/blog/">
-        All Posts
-        <IconArrowRight class="inline-block rtl:-rotate-180" />
-      </LinkButton>
-    </div>
-  </main>
+    </main>
+  </div>
   <Footer />
 </Layout>
 
