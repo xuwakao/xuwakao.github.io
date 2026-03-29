@@ -41,6 +41,7 @@ export function getPostsBySeries(
 const SERIES_LABELS: Record<string, string> = {
   android: "Android",
   atl: "ATL 深度解析",
+  colima: "Colima 源码分析",
   waydroid: "Waydroid 源码分析",
 };
 
